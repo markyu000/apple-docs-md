@@ -55,21 +55,56 @@ python main.py --url "https://developer.apple.com/documentation/foundation" --ou
 
 #### 2. 翻译（可选）
 
-将某目录下全部 Markdown 翻译到例如 `translated/`：
+本项目提供两个翻译脚本，将下载得到的英文 Markdown 批量翻译为简体中文，并支持通过**词表（Glossary）**统一术语。
 
-**OpenAI（如 gpt-4o-mini）：**
+| 脚本 | 后端 | 环境变量 |
+|------|------|----------|
+| `translator-openai.py` | OpenAI（如 gpt-4o-mini） | `OPENAI_API_KEY` |
+| `translator-deepseek.py` | DeepSeek API（兼容 OpenAI 接口） | `DEEPSEEK_API_KEY` |
+
+**基本用法：**
+
+**OpenAI：**
 ```bash
 export OPENAI_API_KEY="your-key"
-python translator-openai.py --input ./uikit --output ./translated
+python translator-openai.py --folder ./uikit --out ./uikit/translated
 ```
 
 **DeepSeek：**
 ```bash
 export DEEPSEEK_API_KEY="your-key"
-python translator-deepseek.py --input ./uikit --output ./translated
+python translator-deepseek.py --folder ./uikit --out ./uikit/translated
 ```
 
-分块大小、词表、模型等见各脚本的 `--help`。
+- **`--folder`**（必填）：待翻译的 Markdown 所在目录（即 `main.py` 的 `--out` 输出目录或其子目录）。
+- **`--out`**：翻译结果输出目录；不填则默认为 `<folder>/translated`。
+- **`--glossary`**：词表文件路径；不填则使用当前工作目录下的 `glossary.md`（若存在）。
+
+已存在于输出目录中的文件会被跳过，便于断点续译。
+
+---
+
+**词表（Glossary）说明**
+
+词表用于在翻译时固定专有术语的译法（如 Swift/UIKit/SwiftUI 等），减少同一术语多种译法。仓库内自带 [glossary.md](glossary.md)，面向 Apple 开发者文档、Swift、SwiftUI 等场景。
+
+**格式**：词表为 Markdown 文件，内含表格；表格需包含 **Term** 列与 **Suggest Transition**（或 **Translation**）列，一行一条术语约定。例如：
+
+```markdown
+| Term              | Suggest Transition |
+| ----------------- | ------------------ |
+| closure           | 闭包               |
+| property          | 属性               |
+| view modifier     | 视图修饰器         |
+| NavigationStack   | 导航栈             |
+```
+
+**使用方式**：
+- 不指定 `--glossary` 时，脚本会尝试读取当前目录下的 `glossary.md`。
+- 指定词表：`--glossary /path/to/glossary.md`。
+- 不使用词表：不提供该文件或传空文件即可。
+
+翻译时模型会将词表作为 system 提示的一部分，按表中约定优先采用对应译法。
 
 ### 开源协议
 
@@ -134,21 +169,56 @@ Output layout:
 
 #### 2. Translate (optional)
 
-Translate all Markdown under a directory, e.g. into `translated/`:
+Two translator scripts batch-translate the downloaded English Markdown into Simplified Chinese, with optional **Glossary** support for consistent terminology.
 
-**OpenAI (e.g. gpt-4o-mini):**
+| Script | Backend | Env var |
+|--------|---------|---------|
+| `translator-openai.py` | OpenAI (e.g. gpt-4o-mini) | `OPENAI_API_KEY` |
+| `translator-deepseek.py` | DeepSeek API (OpenAI-compatible) | `DEEPSEEK_API_KEY` |
+
+**Basic usage:**
+
+**OpenAI:**
 ```bash
 export OPENAI_API_KEY="your-key"
-python translator-openai.py --input ./uikit --output ./translated
+python translator-openai.py --folder ./uikit --out ./uikit/translated
 ```
 
 **DeepSeek:**
 ```bash
 export DEEPSEEK_API_KEY="your-key"
-python translator-deepseek.py --input ./uikit --output ./translated
+python translator-deepseek.py --folder ./uikit --out ./uikit/translated
 ```
 
-See each script's `--help` for chunk size, glossary, and model options.
+- **`--folder`** (required): Directory containing the Markdown files to translate (typically the `--out` directory from `main.py` or a subdirectory).
+- **`--out`**: Output directory for translated files; default is `<folder>/translated`.
+- **`--glossary`**: Path to the glossary file; if omitted, the script uses `glossary.md` in the current working directory when present.
+
+Files that already exist in the output directory are skipped, so you can resume interrupted runs.
+
+---
+
+**Glossary**
+
+The glossary fixes how technical terms (e.g. Swift, UIKit, SwiftUI) are translated so the same term is not rendered in multiple ways. The repo includes a sample [glossary.md](glossary.md) aimed at Apple Developer Documentation / Swift / SwiftUI.
+
+**Format:** The glossary is a Markdown file with one or more tables. Each table must have a **Term** column and a **Suggest Transition** (or **Translation**) column, one row per term. Example:
+
+```markdown
+| Term              | Suggest Transition |
+| ----------------- | ------------------ |
+| closure           | 闭包               |
+| property          | 属性               |
+| view modifier     | 视图修饰器         |
+| NavigationStack   | 导航栈             |
+```
+
+**Usage:**
+- If you do not pass `--glossary`, the script looks for `glossary.md` in the current working directory.
+- To use a custom file: `--glossary /path/to/glossary.md`.
+- To run without a glossary: omit the file or pass an empty one.
+
+The script injects the glossary into the model’s system prompt so the model prefers the given translations for listed terms.
 
 ### License
 
